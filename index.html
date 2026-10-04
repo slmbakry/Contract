@@ -30,6 +30,8 @@
   - Excel: شيت لكل نوع بنفس أسماء الأعمدة → قابل لإعادة الاستيراد. شيت «ملخص» للقراءة فقط.
   - إصلاح: خدمات «مستأجر عربي» كانت بترجع كلها متعلّمة عند فتح عقد محفوظ — اتصلّحت.
   - بدون وسم مدينة في العنوان أو التذييل.
+  - موبايل (≤760px): الهيدر مش ثابت، شريط الأزرار سطر واحد رفيع وبيختفي وقت الكتابة،
+    والمعاينة من غير سكرول داخلي + زرار «👁 معاينة» بينزل لها.
   - الملف منشور كموقع عام ⇒ بيانات الشركة الثابتة (الممثل، الرقم القومي، التليفون، السجل، الضريبية،
     العنوان) غير موجودة في الكود. بتتكتب مرة من «⚙ بيانات الشركة» وتتحفظ على الجهاز
     (osool_company_v1) وتتملّى لوحدها. لو فيه عقد مالك محفوظ قديم بتتاخد منه تلقائيًا.
@@ -71,6 +73,9 @@
   .btn.danger{color:var(--danger);border-color:#f3c9c4}
   .btn:disabled{opacity:.55;cursor:wait}
 
+  .tools{display:flex;gap:8px;flex-wrap:wrap}
+  .sm-only,.status2{display:none}
+
   /* ---------- banner ---------- */
   .banner{max-width:1440px;margin:12px auto 0;padding:0 18px}
   .banner .b{background:#fffbeb;border:1px solid #fcd34d;color:#78350f;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -80,7 +85,7 @@
   .main{max-width:1440px;margin:0 auto;padding:16px 18px 90px}
   .editor{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:18px;align-items:start}
   .pv-col{position:sticky;top:70px}
-  @media(max-width:1100px){.editor{grid-template-columns:1fr}.pv-col{position:static}}
+  @media(max-width:1100px){.editor{grid-template-columns:minmax(0,1fr)}.pv-col{position:static}}
 
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px}
   .card h2{font-size:14px;margin:0 0 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -90,12 +95,12 @@
   .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
   .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
   .full{grid-column:1/-1}
-  @media(max-width:640px){.grid,.g3,.g4{grid-template-columns:1fr 1fr}.full{grid-column:1/-1}}
+  @media(max-width:640px){.grid,.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.full{grid-column:1/-1}}
   .f{display:flex;flex-direction:column;gap:3px;min-width:0}
   label{font-size:13px}
   .f>label{font-size:12px;color:var(--muted);font-weight:600}
   .f>label i{font-style:normal;font-weight:400;color:#9ca3af}
-  input,select,textarea{font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;background:#fff;color:var(--ink);width:100%}
+  input,select,textarea{font-size:14px;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;background:#fff;color:var(--ink);width:100%;min-width:0}
   input:focus,select:focus,textarea:focus{outline:2px solid #e8c98f;border-color:var(--brand)}
   input[readonly]{background:#f9fafb;color:#374151}
   input:disabled,select:disabled,textarea:disabled{background:#f3f4f6;color:#9ca3af}
@@ -106,10 +111,10 @@
   .note{font-size:12.5px;color:var(--warn);background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;margin-top:10px}
 
   /* family switch + type cards */
-  .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#f3f4f6;border-radius:11px;padding:4px;margin-bottom:10px}
+  .seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;background:#f3f4f6;border-radius:11px;padding:4px;margin-bottom:10px}
   .seg button{border:0;background:transparent;padding:9px 10px;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;color:var(--muted)}
   .seg button.on{background:var(--dark);color:#fff}
-  .types{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
   .types button{border:1.5px solid var(--line);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;font-weight:700;font-size:13.5px;background:#fff;color:var(--ink)}
   .types button small{display:block;font-weight:400;color:var(--muted);font-size:11.5px}
   .types button.on{border-color:var(--brand);background:var(--brand-l);color:var(--brand-d)}
@@ -211,12 +216,48 @@
   .bil .biltlaw{font-weight:700;font-size:12px;color:#000;margin-top:3px}
   @media(max-width:680px){.pghd{padding:16px 16px 4px!important}.pgbd{padding:0 16px 24px!important}}
 
+  /* ---------- phones: مفيش هيدر ثابت، وشريط الأزرار سطر واحد رفيع بيختفي وقت الكتابة ---------- */
+  @media screen and (max-width:760px){
+    .topbar{position:static}
+    .topbar .in{padding:8px 12px;gap:8px}
+    .topbar img{height:26px}
+    .topbar h1{font-size:15.5px;flex:1}
+    .topbar h1 small,.topbar .sp,.lg{display:none}
+    .tabs{order:3;width:100%}
+    .tabs button{flex:1;padding:7px 6px}
+    .tools{order:4;width:100%;flex-wrap:nowrap;gap:6px}
+    .tools .btn{flex:1 1 0;min-width:0;justify-content:center;padding:6px 4px;font-size:12px}
+    .banner{padding:0 12px;margin-top:8px}
+    .main{padding:10px 12px 64px}
+    .card{padding:12px}
+    .types{gap:6px}
+    .types button{padding:8px 4px;font-size:12.5px}
+    .types button small{font-size:10.5px}
+    .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .row-inline{flex-wrap:wrap}
+    .paper-wrap{max-height:none;overflow:auto;padding:8px}
+    .pt-head td{padding:12px 16px 4px!important}
+    .pt-body td{padding:0 16px!important}
+    .pt-head img{height:40px}
+    .doc{font-size:10.5pt}
+    .pv-head{flex-wrap:wrap}
+    .actbar .in{padding:6px 8px;gap:5px;flex-wrap:nowrap;overflow:hidden}
+    .actbar .btn{flex:1 1 auto;min-width:0;overflow:hidden;justify-content:center;padding:8px 5px;font-size:12.5px;gap:3px}
+    .actbar .status{display:none}
+    .sm-only{display:inline-flex}
+    .status2{display:block;text-align:center;font-size:11.5px;color:var(--muted);margin-top:10px}
+    body.typing .actbar{display:none}
+    #toast{bottom:60px}
+    .ovl{padding:16px 10px}
+    .listtools input[type=text],.listtools select{max-width:none;flex:1 1 150px}
+  }
+
   /* ---------- print ---------- */
   #printHost{display:none}
   @media print{
     @page{size:A4 portrait;margin:0}
     html,body{background:#fff!important;color:#000}
-    .topbar,.banner,.actbar,#toast,.ovl,.main>*:not(#printHost){display:none!important}
+    .topbar,.banner,.actbar,#toast,.ovl,.status2,.main>*:not(#printHost){display:none!important}
     .main{padding:0!important;max-width:none!important;margin:0!important}
     #printHost{display:block!important}
     .paper{box-shadow:none;max-width:none;margin:0}
@@ -258,10 +299,12 @@
       <button id="tabLs" onclick="showTab('ls')">العقود المحفوظة <span class="cnt" id="dealCnt">0</span></button>
     </div>
     <div class="sp"></div>
-    <button class="btn sm" onclick="openCompany()">⚙ بيانات الشركة</button>
-    <button class="btn sm" onclick="loadDemo()" title="بيانات تجريبية للنوع الحالي">تجربة</button>
-    <button class="btn sm" onclick="exportExcel(true)">⬇ نسخة احتياطية Excel</button>
-    <button class="btn sm" onclick="$('impFile').click()">⬆ استيراد Excel</button>
+    <div class="tools">
+      <button class="btn sm" onclick="openCompany()">⚙ <span class="lg">بيانات </span>الشركة</button>
+      <button class="btn sm" onclick="loadDemo()" title="بيانات تجريبية للنوع الحالي">تجربة</button>
+      <button class="btn sm" onclick="exportExcel(true)">⬇ نسخة<span class="lg"> احتياطية Excel</span></button>
+      <button class="btn sm" onclick="$('impFile').click()">⬆ استيراد<span class="lg"> Excel</span></button>
+    </div>
     <input type="file" id="impFile" accept=".xlsx,.xls" class="hide" onchange="importExcel(this)">
   </div>
 </div>
@@ -641,6 +684,7 @@
     <div id="listBox"></div>
   </div>
 
+  <div class="status2" id="status2"></div>
   <div id="printHost"><div class="paper" id="printPaper"></div></div>
 </div>
 
@@ -650,8 +694,9 @@
     <button class="btn pri" onclick="saveCurrent()">💾 حفظ</button>
     <button class="btn dark" id="btnPdf" onclick="doPdf()">🖨 PDF</button>
     <button class="btn dark" id="btnWord" onclick="doWord()">⬇ Word</button>
+    <button class="btn sm-only" onclick="$('preview').scrollIntoView({behavior:'smooth',block:'start'})" title="المعاينة" aria-label="المعاينة">👁</button>
     <button class="btn" id="btnNext" onclick="nextStage()">↦</button>
-    <button class="btn" onclick="newContract()">＋ عقد جديد</button>
+    <button class="btn" onclick="newContract()" title="عقد جديد" aria-label="عقد جديد">＋<span class="lg"> عقد جديد</span></button>
     <span class="status" id="status"></span>
   </div>
 </div>
@@ -1889,7 +1934,7 @@ function syncForms(){
   document.querySelectorAll('#typesRent button, #typesSale button').forEach(b=>b.classList.toggle('on',b.dataset.v===t));
   const nx = fam==='sale' ? Sale.TYPES[t].next : null;
   $('btnNext').classList.toggle('hide',!nx);
-  if(nx) $('btnNext').textContent='↦ إنشاء '+Sale.TYPES[nx].label;
+  if(nx) $('btnNext').innerHTML='↦ <span class="lg">إنشاء عقد بيع </span>'+(nx==='nihai'?'نهائي':'ابتدائي');
   try{ localStorage.setItem(UI_KEY,JSON.stringify({fam,rent:rentType(),sale:Sale.curType()})); }catch(e){}
   renderCoNote(); schedulePreview(); renderEditInfo();
 }
@@ -1979,7 +2024,7 @@ function checkBackup(){
   $('bkText').textContent=msg+' البيانات محفوظة على هذا الجهاز فقط — نزّل نسخة Excel.';
   $('bkBanner').classList.toggle('hide',!msg||snoozed);
   const lb=m.lastBackup? new Date(m.lastBackup).toLocaleDateString('ar-EG') : 'لا يوجد';
-  $('status').textContent=`آخر نسخة احتياطية: ${lb} — تعديلات بعدها: ${m.changes||0}`;
+  $('status').textContent=$('status2').textContent=`آخر نسخة احتياطية: ${lb} — تعديلات بعدها: ${m.changes||0}`;
   $('dealCnt').textContent=n;
 }
 function snoozeBackup(){ snoozed=true; checkBackup(); }
@@ -2317,6 +2362,10 @@ function loadDemo(){
   ['sPhone','bPhone'].forEach(k=>$('sl_'+k).addEventListener('blur',()=>{ $('sl_'+k).value=normPhone($('sl_'+k).value); }));
   // أي تعديل في الفورم ⇒ معاينة حيّة
   ['input','change'].forEach(ev=>$('formCol').addEventListener(ev,e=>{ if(e.target.closest('#rentForms,#saleForm')) onFormEdit(); }));
+  // موبايل: شريط الأزرار بيختفي والكيبورد مفتوح
+  const typingEl=el=>!!el&&(el.tagName==='TEXTAREA'||(el.tagName==='INPUT'&&!['checkbox','radio','button','file','date'].includes(el.type)&&!el.readOnly));
+  document.addEventListener('focusin',e=>{ if(typingEl(e.target)) document.body.classList.add('typing'); });
+  document.addEventListener('focusout',()=>setTimeout(()=>{ if(!typingEl(document.activeElement)) document.body.classList.remove('typing'); },150));
   window.addEventListener('beforeunload',e=>{ if(dirty){ e.preventDefault(); e.returnValue=''; } });
   const moved=migrateOld();
   seedCompanyFromRecords(); applyCompanyToOwner();
