@@ -35,6 +35,7 @@
   - الملف منشور كموقع عام ⇒ بيانات الشركة الثابتة (الممثل، الرقم القومي، التليفون، السجل، الضريبية،
     العنوان) غير موجودة في الكود. بتتكتب مرة من «⚙ بيانات الشركة» وتتحفظ على الجهاز
     (osool_company_v1) وتتملّى لوحدها. لو فيه عقد مالك محفوظ قديم بتتاخد منه تلقائيًا.
+    أو تتستورد من ملف Excel صغير (شيت «بيانات الشركة»: البيان / القيمة) — الملف ده ما يترفعش على الريبو.
   TODO:
   - [ ] ترحيل التخزين إلى Supabase مع باقي الأدوات.
   ======================================================================
@@ -323,7 +324,7 @@
   <div id="viewEd" class="editor">
     <div id="formCol">
       <div class="editing" id="editInfo"></div>
-      <div class="note conote hide" id="coNote"><span id="coNoteTxt" style="flex:1;min-width:200px"></span><button type="button" class="btn sm pri" onclick="openCompany()">⚙ إدخال بيانات الشركة</button></div>
+      <div class="note conote hide" id="coNote"><span id="coNoteTxt" style="flex:1;min-width:200px"></span><button type="button" class="btn sm pri" onclick="$('coFile').click()">⬆ استيراد من Excel</button><button type="button" class="btn sm" onclick="openCompany()">⚙ كتابة يدوي</button></div>
 
       <div class="card">
         <h2><span class="n">١</span> نوع العقد</h2>
@@ -713,12 +714,16 @@
       <div class="f"><label>سجل تجاري</label><input id="co_reg"></div>
       <div class="f"><label>بطاقة ضريبية</label><input id="co_tax"></div>
     </div>
-    <div style="display:flex;gap:8px;margin-top:14px">
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
       <button type="button" class="btn pri" onclick="saveCompany()">💾 حفظ</button>
       <button type="button" class="btn" onclick="closeCompany()">إلغاء</button>
+      <span style="flex:1"></span>
+      <button type="button" class="btn" onclick="$('coFile').click()">⬆ استيراد من Excel</button>
+      <button type="button" class="btn" onclick="exportCompany()">⬇ تصدير</button>
     </div>
   </div>
 </div>
+<input type="file" id="coFile" accept=".xlsx,.xls" class="hide" onchange="importCompanyFile(this)">
 <div id="toast"></div>
 
 <script>
@@ -2292,6 +2297,36 @@ function rowToRecord(kind,row){
   if(kind==='sale'){ rec.data.type=rec.type; Sale.normPhones(rec.data); }
   return rec;
 }
+/* يقرا شيت «بيانات الشركة» (عمودين: البيان / القيمة) */
+function companyFromWb(wb,overwrite){
+  const sn=wb.SheetNames.find(n=>normAr(n)===normAr(CO_SHEET)); if(!sn) return false;
+  const byH={}; CO_FIELDS.forEach(([k,h])=>byH[normAr(h)]=k);
+  const c=getCompany(); let n=0;
+  XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:'',raw:true}).forEach(row=>{
+    const k=byH[normAr(row['البيان'])], v=row['القيمة'];
+    if(k && has(v) && (overwrite||!has(c[k]))){ c[k]=String(v).trim(); n++; } });
+  if(!n) return false;
+  c.phone=normPhone(c.phone);
+  if(!setCompany(c)) return false;
+  if(!(current && curCtx==='rent:owner')) applyCompanyToOwner();
+  renderCoNote(); schedulePreview();
+  return true;
+}
+async function importCompanyFile(inp){
+  const f=inp.files[0]; inp.value=''; if(!f) return;
+  try{ await ensureXLSX(); }catch(e){ toast(e.message); return; }
+  let wb; try{ wb=XLSX.read(await f.arrayBuffer(),{type:'array'}); }catch(e){ toast('تعذّر قراءة الملف'); return; }
+  if(companyFromWb(wb,true)){ closeCompany(); toast('تم استيراد بيانات الشركة وحفظها على هذا الجهاز ✓'); }
+  else toast('الملف مفيهوش شيت «بيانات الشركة» أو الشيت فاضي');
+}
+async function exportCompany(){
+  try{ await ensureXLSX(); }catch(e){ toast(e.message); return; }
+  const c={}; CO_FIELDS.forEach(([k])=>c[k]=$('co_'+k).value.trim());
+  const ws=XLSX.utils.json_to_sheet(CO_FIELDS.map(([k,h])=>({'البيان':h,'القيمة':c[k]})),{header:['البيان','القيمة']});
+  ws['!cols']=[{wch:26},{wch:48}]; ws['!views']=[{RTL:true}];
+  const wb=XLSX.utils.book_new(); wb.Workbook={Views:[{RTL:true}]}; XLSX.utils.book_append_sheet(wb,ws,CO_SHEET);
+  XLSX.writeFile(wb,'بيانات الشركة.xlsx'); toast('تم تنزيل ملف بيانات الشركة — احتفظ به في مكان خاص');
+}
 async function importExcel(inp){
   const f=inp.files[0]; inp.value=''; if(!f) return;
   try{ await ensureXLSX(); }catch(e){ toast(e.message); return; }
@@ -2300,15 +2335,8 @@ async function importExcel(inp){
   const incoming=[];
   wb.SheetNames.forEach(sn=>{ const kind=byName[normAr(sn)]; if(!kind) return;
     XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:'',raw:true}).forEach(row=>{ const r=rowToRecord(kind,row); if(has(summ(r).name)) incoming.push(r); }); });
-  // بيانات الشركة: بتتاخد من الملف لو الجهاز ده مفيهوش بيانات محفوظة
-  let coLoaded=false;
-  const coSn=wb.SheetNames.find(n=>normAr(n)===normAr(CO_SHEET));
-  if(coSn && companyMissing().length){
-    const byH={}; CO_FIELDS.forEach(([k,h])=>byH[normAr(h)]=k);
-    const c=getCompany();
-    XLSX.utils.sheet_to_json(wb.Sheets[coSn],{defval:'',raw:true}).forEach(row=>{ const k=byH[normAr(row['البيان'])]; if(k && !has(c[k]) && has(row['القيمة'])) { c[k]=String(row['القيمة']).trim(); coLoaded=true; } });
-    if(coLoaded){ setCompany(c); if(!(current && curCtx==='rent:owner')) applyCompanyToOwner(); renderCoNote(); schedulePreview(); }
-  }
+  // بيانات الشركة: ملف فيه الشركة بس ⇒ تتحدّث كلها. ملف نسخة احتياطية كاملة ⇒ تكمّل الناقص بس
+  const coLoaded=companyFromWb(wb,!incoming.length);
   if(!incoming.length && coLoaded){ toast('تم استيراد بيانات الشركة ✓'); return; }
   if(!incoming.length){ toast('مفيش صفوف صالحة — الملف لازم يكون نسخة احتياطية من الأداة (شيتات: '+Object.values(SHEETS).join('، ')+')'); return; }
   const list=loadAll(); let add=0, upd=0;
